@@ -18,6 +18,7 @@ package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Transformations
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
@@ -42,7 +43,7 @@ class SleepTrackerViewModel(
 
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    private val tonight = MutableLiveData<SleepNight?>()
+    private val _tonight = MutableLiveData<SleepNight?>()
 
     private val nights = database.getAllNights()
 
@@ -50,13 +51,21 @@ class SleepTrackerViewModel(
         formatNights(nights, application.resources)
     }
 
+    private var _navigateToSleepQuality = MutableLiveData<SleepNight?>()
+    val navigateToSleepQuality: LiveData<SleepNight?>
+        get() = _navigateToSleepQuality
+
     init {
         initializeTonight()
     }
 
+    fun doneNavigating() {
+        _navigateToSleepQuality.value = null
+    }
+
     private fun initializeTonight() {
         uiScope.launch {
-            tonight.value = getTonightFromDatabase()
+            _tonight.value = getTonightFromDatabase()
         }
     }
 
@@ -77,7 +86,7 @@ class SleepTrackerViewModel(
 
             insertNight(night)
 
-            tonight.value = getTonightFromDatabase()
+            _tonight.value = getTonightFromDatabase()
         }
     }
 
@@ -89,11 +98,12 @@ class SleepTrackerViewModel(
 
     fun onStopTracking() {
         uiScope.launch {
-            val oldNight = tonight.value ?: return@launch
+            val oldNight = _tonight.value ?: return@launch
 
             oldNight.endTimeMilli = System.currentTimeMillis()
 
             updateNight(oldNight)
+            _navigateToSleepQuality.value = oldNight
         }
     }
 
@@ -105,12 +115,12 @@ class SleepTrackerViewModel(
 
     fun onClear() {
         uiScope.launch {
-            clear()
-            tonight.value = null
+            clearAllNights()
+            _tonight.value = null
         }
     }
 
-    private suspend fun clear() {
+    private suspend fun clearAllNights() {
         withContext(Dispatchers.IO) {
             database.clear()
         }
