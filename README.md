@@ -1,4 +1,4 @@
-## :sleeping: Sleep Quality Tracker App (수면 점수 체크 앱) :sleeping:
+## :sleeping: Sleep Quality Tracker App (수면 퀄리티 체크 앱) :sleeping:
 Udacity 과정 Lesson 6 실습 (링크 : https://www.udacity.com/) <br>
 This is the toy app for Lesson 6 of the [Android App Development in Kotlin course on Udacity](https://www.udacity.com/course/???).
 
