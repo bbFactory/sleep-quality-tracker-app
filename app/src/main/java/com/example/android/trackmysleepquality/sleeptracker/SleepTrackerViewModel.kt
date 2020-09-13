@@ -17,6 +17,7 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -43,7 +44,7 @@ class SleepTrackerViewModel(
 
     private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
 
-    private val _tonight = MutableLiveData<SleepNight?>()
+    private val tonight = MutableLiveData<SleepNight?>()
 
     private val nights = database.getAllNights()
 
@@ -55,6 +56,12 @@ class SleepTrackerViewModel(
     val navigateToSleepQuality: LiveData<SleepNight?>
         get() = _navigateToSleepQuality
 
+    val startButtonVisible = Transformations.map(tonight) { null == it }
+
+    val stopButtonVisible = Transformations.map(tonight) { null != it }
+
+    val clearButtonVisible = Transformations.map(nights) { it?.isNotEmpty() }
+
     init {
         initializeTonight()
     }
@@ -65,7 +72,7 @@ class SleepTrackerViewModel(
 
     private fun initializeTonight() {
         uiScope.launch {
-            _tonight.value = getTonightFromDatabase()
+            tonight.value = getTonightFromDatabase()
         }
     }
 
@@ -86,7 +93,7 @@ class SleepTrackerViewModel(
 
             insertNight(night)
 
-            _tonight.value = getTonightFromDatabase()
+            tonight.value = getTonightFromDatabase()
         }
     }
 
@@ -98,7 +105,7 @@ class SleepTrackerViewModel(
 
     fun onStopTracking() {
         uiScope.launch {
-            val oldNight = _tonight.value ?: return@launch
+            val oldNight = tonight.value ?: return@launch
 
             oldNight.endTimeMilli = System.currentTimeMillis()
 
@@ -116,7 +123,7 @@ class SleepTrackerViewModel(
     fun onClear() {
         uiScope.launch {
             clearAllNights()
-            _tonight.value = null
+            tonight.value = null
         }
     }
 
